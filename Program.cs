@@ -9,7 +9,7 @@ public class Program
     static String dbCredentials = @"server=localhost;userid=connect4;password=connect4;database=connect4";
     static MySqlConnection databaseConnection = new MySqlConnection(dbCredentials);
 
-    public static Player? Login(String name, String password) {
+    public static Player? Login(String name, String password, ConsoleColor colour) {
         MySqlCommand cmd = new MySqlCommand($"SELECT * FROM users WHERE name = @name",
                 databaseConnection);
         int id = 1;
@@ -38,13 +38,13 @@ public class Program
         }
         if (id != 0) {
             Printing.PrintColouredText($"Welcome back, {name}!\n", ConsoleColor.Green);
-            return new Human(id, name);
+            return new Human(id, name, colour);
         }
 
         return null;
     }
 
-    private static Player? Register(String name, String password) {
+    private static Player? Register(String name, String password, ConsoleColor colour) {
         int id = 1;
         MySqlCommand cmd = new MySqlCommand("SELECT * FROM users WHERE name = @name",
                 databaseConnection);
@@ -84,10 +84,10 @@ public class Program
         queryResult.Close();
         Printing.PrintColouredText("Registration completed.\n", ConsoleColor.Green);
 
-        return new Human(id, name);
+        return new Human(id, name, colour);
     }
     
-    private static Player? Connect() {
+    private static Player? Connect(ConsoleColor colour) {
         // Authenfication process
         Console.Write("Do you have an account? [Y/n] ");
         String name, password;
@@ -103,7 +103,7 @@ public class Program
                 Console.ForegroundColor = ConsoleColor.White;
                 password = Input.GetInput();
                 Console.ForegroundColor = ConsoleColor.Gray;
-                return Login(name, password);
+                return Login(name, password, colour);
             }
             else if (prompt == "" || prompt == "n" || prompt == "no") {
                 Printing.PrintColouredText("Register\n", ConsoleColor.Yellow);
@@ -115,10 +115,10 @@ public class Program
                 Console.ForegroundColor = ConsoleColor.White;
                 password = Input.GetInput();
                 Console.ForegroundColor = ConsoleColor.Gray;
-                return Register(name, password);
+                return Register(name, password, colour);
             }
             else {
-                Console.Write("Invalid value. Please answer yes or no. [Y/n] ");
+                Printing.PrintColouredText("Invalid value. Please answer yes or no. [Y/n] ", ConsoleColor.Red);
             }
         }   
     }
@@ -148,10 +148,14 @@ public class Program
         Player? player2 = null;
         if (input == "h" || input == "human" || input == "") {
             while(player2 == null)
-                player2 = Connect();
+                player2 = Connect(ConsoleColor.Red);
         }
         else
-            player2 = new Computer();
+            player2 = new Computer(ConsoleColor.Red);
+        if (player1.Id == player2.Id) {
+            Printing.PrintColouredText("Impossible to play a game against yourself.\n", ConsoleColor.Red);
+            return;
+        }
         Game game = new Game(player1, player2);
     }
 
@@ -242,10 +246,10 @@ public class Program
   #####   ####  #    # #    # ######  ####    #        #  
                                                           ");
         // Getting the user's credentials
-        Player? player1 = Connect();
+        Player? player1 = Connect(ConsoleColor.Blue);
         while(player1 == null) {
             Printing.PrintColouredText("Connection failed.\n", ConsoleColor.Red);
-            player1 = Connect();
+            player1 = Connect(ConsoleColor.Blue);
         }
         Console.WriteLine("Type \"help\" for a list of all possible actions");
         bool connected = true;
