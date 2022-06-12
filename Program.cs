@@ -5,8 +5,8 @@ using player;
 
 public class Program
 {
-    static String credentials = @"server=localhost;userid=connect4;password=connect4;database=connect4";
-    static MySqlConnection databaseConnection = new MySqlConnection(credentials);
+    static String dbCredentials = @"server=localhost;userid=connect4;password=connect4;database=connect4";
+    static MySqlConnection databaseConnection = new MySqlConnection(dbCredentials);
 
     public static Player? Login(String name, String password) {
         MySqlCommand cmd = new MySqlCommand($"SELECT * FROM users WHERE name = @name",
@@ -189,7 +189,13 @@ public class Program
     public static void Main(String[] args)
     {
         // Connecting to the database
-        databaseConnection.Open();
+        try {
+            databaseConnection.Open();
+        }
+        catch(Exception) {
+            Printing.PrintColouredText("Unable to connect to the database server.\n", ConsoleColor.Red);
+            return;
+        }
         Console.WriteLine(@"  #####                                           #       
  #     #  ####  #    # #    # ######  ####  ##### #    #  
  #       #    # ##   # ##   # #      #    #   #   #    #  
