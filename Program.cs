@@ -9,10 +9,9 @@ public class Program
     static MySqlConnection databaseConnection = new MySqlConnection(credentials);
 
     public static Player? Login(String name, String password) {
-        bool ok = true;
         MySqlCommand cmd = new MySqlCommand($"SELECT * FROM users WHERE name = @name",
                 databaseConnection);
-        int id = 0;
+        int id = 1;
         try {
             cmd.Parameters.AddWithValue("@name", name);
             cmd.Prepare();
@@ -20,29 +19,32 @@ public class Program
             MySqlDataReader result = cmd.ExecuteReader();
             if (result.Read() == false) {
                 Printing.PrintColouredText("No user with such name.\n", ConsoleColor.Red);
-                ok = false;
+                id = 0;
             }
             else {
                 if (result.GetString("password") == password)
                     id = result.GetInt32("id");
                 else {
                     Printing.PrintColouredText("Wrong password.\n", ConsoleColor.Red);
-                    ok = false;
+                    id = 0;
                 }
             }
             result.Close();
         }
         catch(Exception) {
             Printing.PrintColouredText("Error while attempting to login.\n", ConsoleColor.Red);
-            ok = false;
+            id = 0;
         }
-        if (ok)
-            return new Human(name);
+        if (id != 0) {
+            Printing.PrintColouredText($"Welcome back, {name}!\n", ConsoleColor.Green);
+            return new Human(id, name);
+        }
+
         return null;
     }
 
-    public static Player? Register(String name, String password) {
-        bool ok = true;
+    private static Player? Register(String name, String password) {
+        int id = 1;
         MySqlCommand cmd = new MySqlCommand("SELECT * FROM users WHERE name = @name",
                 databaseConnection);
         try {
@@ -51,16 +53,15 @@ public class Program
             MySqlDataReader result = cmd.ExecuteReader();
             if (result.Read()) {
                 Printing.PrintColouredText("There is already an user with such name.\n", ConsoleColor.Red);
-                ok = false;
+                id = 0;
             }
             result.Close();
         }
-        catch(Exception e) {
-            Printing.PrintColouredText(e.Message + "\n", ConsoleColor.Red);
+        catch(Exception) {
             Printing.PrintColouredText("Error while attempting to create a new user.\n", ConsoleColor.Red);
             return null;
         }
-        if (!ok)
+        if (id == 0)
             return null;
         cmd = new MySqlCommand("INSERT INTO users(name, password) VALUES(@name, @password)",
                 databaseConnection);
@@ -70,30 +71,36 @@ public class Program
             cmd.Prepare();
             cmd.ExecuteNonQuery();
         }
-        catch(Exception e) {
-            Printing.PrintColouredText(e.Message + "\n", ConsoleColor.Red);
+        catch(Exception) {
             Printing.PrintColouredText("Error while attempting to create a new user.\n", ConsoleColor.Red);
             return null;
         } 
+        cmd = new MySqlCommand("SELECT MAX(id) FROM users",
+            databaseConnection);
+        MySqlDataReader queryResult = cmd.ExecuteReader();
+        queryResult.Read();
+        id = queryResult.GetInt32(0);
+        queryResult.Close();
+        Printing.PrintColouredText("Registration completed.\n", ConsoleColor.Green);
 
-        return new Human(name);
+        return new Human(id, name);
     }
     
-    public static Player? Connect() {
+    private static Player? Connect() {
         // Authenfication process
         Console.Write("Do you have an account? [Y/n] ");
         String name, password;
         while (true) {
-            String prompt = Console.ReadLine()?.ToLower() ?? "";
+            String prompt = Input.GetInput(true);
             if (prompt == "" || prompt == "y" || prompt == "yes") {
                 Printing.PrintColouredText("Login\n", ConsoleColor.Yellow);
                 Console.Write("Your name: ");
                 Console.ForegroundColor = ConsoleColor.White;
-                name = Console.ReadLine() ?? "";
+                name = Input.GetInput();
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.Write("Your password: ");
                 Console.ForegroundColor = ConsoleColor.White;
-                password = Console.ReadLine() ?? "";
+                password = Input.GetInput();
                 Console.ForegroundColor = ConsoleColor.Gray;
                 return Login(name, password);
             }
@@ -101,11 +108,11 @@ public class Program
                 Printing.PrintColouredText("Register\n", ConsoleColor.Yellow);
                 Console.Write("Your name: ");
                 Console.ForegroundColor = ConsoleColor.White;
-                name = Console.ReadLine() ?? "";
+                name = Input.GetInput();
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.Write("Your password: ");
                 Console.ForegroundColor = ConsoleColor.White;
-                password = Console.ReadLine() ?? "";
+                password = Input.GetInput();
                 Console.ForegroundColor = ConsoleColor.Gray;
                 return Register(name, password);
             }
@@ -114,13 +121,83 @@ public class Program
             }
         }   
     }
+
+    private static void Help() {
+        Printing.PrintColouredText("help", ConsoleColor.White);
+        Console.WriteLine(": lists all possible actions");
+        Printing.PrintColouredText("new", ConsoleColor.White);
+        Console.WriteLine(": creates a new game");
+        Printing.PrintColouredText("delete", ConsoleColor.White);
+        Console.WriteLine(": deletes your account");
+        Printing.PrintColouredText("quit", ConsoleColor.White);
+        Console.WriteLine(": quits the game");
+    }
+
+    private static bool Delete(int id) {
+        while(true) {
+            Printing.PrintColouredText("Are you sure you want to permanently delete your account? [y/N] ", ConsoleColor.DarkRed);
+            String input = Input.GetInput(true);
+            if (input == "y" || input == "yes") {
+                Printing.PrintColouredText("Please enter your password to confirm. If you changed your mind, enter \"quit\". ",
+                        ConsoleColor.DarkRed);
+                input = Input.GetInput();
+                if (input == "quit") {
+                    Printing.PrintColouredText("Deletion process was aborted\n", ConsoleColor.Yellow);
+                    return true;
+                }
+                MySqlCommand cmd = new MySqlCommand("DELETE FROM users WHERE id = @id AND password = @input",
+                        databaseConnection); 
+                try {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Parameters.AddWithValue("@input", input);
+                    cmd.Prepare();
+                    if (cmd.ExecuteNonQuery() == -1) {
+                        Printing.PrintColouredText("Wrong password.\n", ConsoleColor.Red);
+                        return true;
+                    }
+                }
+                catch(Exception e) {
+                    Console.WriteLine(e.Message);
+                    Printing.PrintColouredText("An error occured while trying to delete the account. The process was aborted.\n",
+                            ConsoleColor.Red);
+                    return true;
+                }
+                Printing.PrintColouredText("The account has been succesfully deleted.\n", ConsoleColor.Green);
+
+                return false;
+            }
+            else if (input == "n" || input == "no" || input == "")
+                return true;
+            else
+                Printing.PrintColouredText("Invalid input.\n", ConsoleColor.Red);
+        }
+    }
+
+    private static bool Quit() {
+        while(true) {
+            Printing.PrintColouredText("Are you sure you want to quit? [y/N] ", ConsoleColor.Yellow);
+            String input = Input.GetInput(true);
+            if (input == "y" || input == "yes")
+                return false;
+            else if (input == "n" || input == "no" || input == "")
+                return true;
+            else 
+                Printing.PrintColouredText("Invalid input.\n", ConsoleColor.Red);
+        }
+    }
+
     public static void Main(String[] args)
     {
         // Connecting to the database
         databaseConnection.Open();
-        MySqlCommand cmd = new MySqlCommand("SELECT VERSION()", databaseConnection);
-        String version = cmd.ExecuteScalar().ToString() ?? "Not found";
-        Console.WriteLine($"Using MySQL version ${version}");
+        Console.WriteLine(@"  #####                                           #       
+ #     #  ####  #    # #    # ######  ####  ##### #    #  
+ #       #    # ##   # ##   # #      #    #   #   #    #  
+ #       #    # # #  # # #  # #####  #        #   #    #  
+ #       #    # #  # # #  # # #      #        #   ####### 
+ #     # #    # #   ## #   ## #      #    #   #        #  
+  #####   ####  #    # #    # ######  ####    #        #  
+                                                          ");
         if (args.Length == 1 && args[0] == "--help") {
             Console.WriteLine("Builtin help not implemented yet.");
             return;
@@ -131,7 +208,24 @@ public class Program
             Printing.PrintColouredText("Connection failed.\n", ConsoleColor.Red);
             player1 = Connect();
         }
-        Console.WriteLine("Hello " + player1.Name);
+        Console.WriteLine("Type \"help\" for a list of all possible actions");
+        bool connected = true;
+        String input = "";
+        while(connected) {
+            Console.Write("What would you like to do? ");
+            input = Input.GetInput(true);
+            if (input == "help")
+                Help();
+            else if (input == "new") 
+                throw new NotImplementedException("new action has not been implemented yet");
+            else if (input == "delete")
+                connected = Delete(player1.Id);
+            else if (input == "quit") 
+                connected = Quit();
+            else
+                Printing.PrintColouredText("Invalid input\n", ConsoleColor.Red);
+            Console.WriteLine("");
+        }
         // Closing the connection to the database
         databaseConnection.Close();
     }
