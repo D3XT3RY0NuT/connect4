@@ -1,3 +1,5 @@
+using utilities;
+
 namespace player
 {
     public class Computer : Player
@@ -8,7 +10,11 @@ namespace player
         }
 
         public override int NextTurn() {
-            return random.Next(1, 8);
+            int move = random.Next(Constants.MinColumn, Constants.MaxColumn + 1) ;
+            Printing.PrintColouredText($"{this.Name} ", this.Colour);
+            Console.Write("player turn: ");
+            Printing.PrintColouredText($"{move}\n", ConsoleColor.White);
+            return move;
         }
     }
 }

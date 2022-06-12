@@ -13,16 +13,8 @@ namespace player
             int move = 0;
             String input = "";
             bool choosing = true;
-            while ((move < 1 || move > 7) && choosing) {
-                if (this.Colour == ConsoleColor.Blue)
-                    Printing.PrintColouredText("BLUE ", ConsoleColor.Blue);
-                else if (this.Colour == ConsoleColor.Red)
-                    Printing.PrintColouredText("RED ", ConsoleColor.Red);
-                else {
-                    Printing.PrintColouredText("Support for custom colour not implemented yet. Using red as a colour.\n",
-                            ConsoleColor.Red);
-                    Printing.PrintColouredText("RED ", ConsoleColor.Red);
-                }
+            while ((move < Constants.MinColumn || move > Constants.MaxColumn) && choosing) {
+                Printing.PrintColouredText($"{this.Name} ", this.Colour);
                 Console.Write("player turn: ");
                 input = Input.GetInput(true); 
                 if (input == "help" || input == "h")
@@ -34,12 +26,12 @@ namespace player
                 else {
                     try {
                         move = Convert.ToInt32(input);
+                        if (move < Constants.MinColumn || move > Constants.MaxColumn)
+                            Printing.PrintColouredText("Invalid input. Please try again.\n", ConsoleColor.Red);
                     }
                     catch(Exception) {
                         Printing.PrintColouredText("Invalid input. Please try again.\n", ConsoleColor.Red);
                     }
-                    if (move < 1 || move > 7)
-                        Printing.PrintColouredText("Invalid input. Please try again.\n", ConsoleColor.Red);
                 }
             }
             

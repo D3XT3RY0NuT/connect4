@@ -1,4 +1,5 @@
 using board;
+using exceptions;
 using player;
 using utilities;
 
@@ -40,13 +41,31 @@ namespace game
             Printing.PrintColouredText($" vs ", ConsoleColor.Yellow);
             Printing.PrintColouredText($"{player2.Name}\n\n", ConsoleColor.Red);
             int move = 0;
-            while (this.running) {
-                board.Display();
+            while (this.running && !this.board.IsGameOver) {
+                this.board.Display();
                 move = this.NextTurn();
                 if (move == 0)
                     this.running = false;
-                ChangeCurrentPlayer();
+                else {
+                    try {
+                        this.board.PlayMove(move, this.currentPlayer);
+                        ChangeCurrentPlayer();
+                    }
+                    catch(BoardException) {
+                        Printing.PrintColouredText("Invalid choice. Please choose again.\n", ConsoleColor.Red);
+                    }
+                    catch(Exception) {
+                        Printing.PrintColouredText("Internal error occured. Please try again.\n", ConsoleColor.Red);
+                    }
+                }
             }
+            this.board.Display();
+            if (this.board.WinningPlayer == Cell.Player1)
+                Printing.PrintColouredText($"{player1.Name} has won! Congratulations!\n", player1.Colour);
+            else if (this.board.WinningPlayer == Cell.Player2)
+                Printing.PrintColouredText($"{player2.Name} has won! Congratulations!\n", player2.Colour);
+            else
+                Printing.PrintColouredText($"Draw! This was a though game!\n", ConsoleColor.White);
             Printing.PrintColouredText("Game ended.\n", ConsoleColor.Gray);
         }
     }

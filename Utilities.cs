@@ -21,4 +21,12 @@ namespace utilities
             return input;
         }
     }
+
+    public static class Constants
+    {
+        public const int MinColumn = 1;
+        public const int MaxColumn = 7;
+        public const int MinRow = 1;
+        public const int MaxRow = 6;
+    }
 }
