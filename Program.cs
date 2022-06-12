@@ -1,7 +1,8 @@
 ﻿using MySql.Data.MySqlClient;
 
-using utilities;
+using game;
 using player;
+using utilities;
 
 public class Program
 {
@@ -133,6 +134,27 @@ public class Program
         Console.WriteLine(": quits the game");
     }
 
+    private static void New(Player player1) {
+        bool choosing = true;
+        String input = "";
+        while (choosing) {
+            Console.Write("Would you like to play against a human player or the computer? [Human/computer] ");
+            input = Input.GetInput(true);
+            if (input == "h" || input == "human" || input == "" || input == "c" || input == "computer")
+                choosing = false;
+            else
+                Printing.PrintColouredText("Invalid input. Please type either \"human\" or \"computer\".\n", ConsoleColor.Red);
+        }
+        Player? player2 = null;
+        if (input == "h" || input == "human" || input == "") {
+            while(player2 == null)
+                player2 = Connect();
+        }
+        else
+            player2 = new Computer();
+        Game game = new Game(player1, player2);
+    }
+
     private static bool Delete(int id) {
         while(true) {
             Printing.PrintColouredText("Are you sure you want to permanently delete your account? [y/N] ", ConsoleColor.DarkRed);
@@ -234,7 +256,7 @@ public class Program
             if (input == "help")
                 Help();
             else if (input == "new") 
-                throw new NotImplementedException("new action has not been implemented yet");
+                New(player1);
             else if (input == "delete")
                 connected = Delete(player1.Id);
             else if (input == "quit") 
