@@ -20,6 +20,26 @@ namespace utilities
 
             return input;
         }
+
+        public static String GetSecureInput(bool toLower = false) {
+            String input = "";
+            bool typing = true;
+            while(typing) {
+                ConsoleKeyInfo key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Enter) {
+                    Console.Write('\n');
+                    typing = false;
+                }
+                else if (key.Key == ConsoleKey.Backspace && input.Length > 0)
+                    input = input.Substring(0, input.Length - 1);
+                else
+                    input += key.KeyChar;
+            }
+            if (toLower)
+                input.ToLower();
+
+            return input;
+        }
     }
 
     public static class Constants

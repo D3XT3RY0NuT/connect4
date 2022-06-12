@@ -9,7 +9,12 @@ public class Program
     static String dbCredentials = @"server=localhost;userid=connect4;password=connect4;database=connect4";
     static MySqlConnection databaseConnection = new MySqlConnection(dbCredentials);
 
-    public static Player? Login(String name, String password, ConsoleColor colour) {
+    public static Player? Login(ConsoleColor colour) {
+        Printing.PrintColouredText("Login\n", ConsoleColor.Yellow);
+        Console.Write("Your name: ");
+        String name = Input.GetInput();
+        Console.Write("Your password: ");
+        String password = Input.GetSecureInput();
         MySqlCommand cmd = new MySqlCommand($"SELECT * FROM users WHERE name = @name",
                 databaseConnection);
         int id = 1;
@@ -44,7 +49,28 @@ public class Program
         return null;
     }
 
-    private static Player? Register(String name, String password, ConsoleColor colour) {
+    private static Player? Register(ConsoleColor colour) {
+        String name = "", password = "", passwordConfirmation = "";
+        Printing.PrintColouredText("Register\n", ConsoleColor.Yellow);
+        Console.Write("Your name: ");
+        name = Input.GetInput();
+        Console.Write("Your password: ");
+        password = Input.GetSecureInput();
+        while (password.Length < 6 || password.Length > 50) {
+            if (password.Length < 6)
+                Printing.PrintColouredText("Your password must be at least 6 characters long. Please try again: ",
+                        ConsoleColor.Red);
+            else 
+                Printing.PrintColouredText("Your password must be less than 50 characters long. Please try again: ",
+                        ConsoleColor.Red);
+            password = Input.GetSecureInput();
+        }
+        Console.Write("Confirm your password: ");
+        passwordConfirmation = Input.GetSecureInput();
+        while (passwordConfirmation != password) {
+            Printing.PrintColouredText("Passwords don't match. Please try again: ", ConsoleColor.Red);
+            passwordConfirmation = Input.GetSecureInput();
+        }
         int id = 1;
         MySqlCommand cmd = new MySqlCommand("SELECT * FROM users WHERE name = @name",
                 databaseConnection);
@@ -90,33 +116,13 @@ public class Program
     private static Player? Connect(ConsoleColor colour) {
         // Authenfication process
         Console.Write("Do you have an account? [Y/n] ");
-        String name, password;
         while (true) {
             String prompt = Input.GetInput(true);
             if (prompt == "" || prompt == "y" || prompt == "yes") {
-                Printing.PrintColouredText("Login\n", ConsoleColor.Yellow);
-                Console.Write("Your name: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                name = Input.GetInput();
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.Write("Your password: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                password = Input.GetInput();
-                Console.ForegroundColor = ConsoleColor.Gray;
-                return Login(name, password, colour);
+                return Login(colour);
             }
-            else if (prompt == "" || prompt == "n" || prompt == "no") {
-                Printing.PrintColouredText("Register\n", ConsoleColor.Yellow);
-                Console.Write("Your name: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                name = Input.GetInput();
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.Write("Your password: ");
-                Console.ForegroundColor = ConsoleColor.White;
-                password = Input.GetInput();
-                Console.ForegroundColor = ConsoleColor.Gray;
-                return Register(name, password, colour);
-            }
+            else if (prompt == "" || prompt == "n" || prompt == "no")
+                return Register(colour);
             else {
                 Printing.PrintColouredText("Invalid value. Please answer yes or no. [Y/n] ", ConsoleColor.Red);
             }
@@ -148,7 +154,7 @@ public class Program
         Player? player2 = null;
         if (input == "h" || input == "human" || input == "") {
             while(player2 == null)
-                player2 = Connect(ConsoleColor.Red);
+                player2 = Login(ConsoleColor.Red);
         }
         else
             player2 = new Computer(ConsoleColor.Red);
@@ -166,7 +172,7 @@ public class Program
             if (input == "y" || input == "yes") {
                 Printing.PrintColouredText("Please enter your password to confirm. If you changed your mind, enter \"quit\". ",
                         ConsoleColor.DarkRed);
-                input = Input.GetInput();
+                input = Input.GetSecureInput();
                 if (input == "quit") {
                     Printing.PrintColouredText("Deletion process was aborted\n", ConsoleColor.Yellow);
                     return true;

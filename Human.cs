@@ -14,8 +14,8 @@ namespace player
             String input = "";
             bool choosing = true;
             while ((move < Constants.MinColumn || move > Constants.MaxColumn) && choosing) {
-                Printing.PrintColouredText($"{this.Name} ", this.Colour);
-                Console.Write("player turn: ");
+                Printing.PrintColouredText($"{this.Name}'s ", this.Colour);
+                Console.Write("turn: ");
                 input = Input.GetInput(true); 
                 if (input == "help" || input == "h")
                     Printing.PrintColouredText("Help during the game not implemented yet.\n", ConsoleColor.Yellow);
