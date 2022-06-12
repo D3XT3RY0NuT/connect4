@@ -196,6 +196,21 @@ public class Program
             Printing.PrintColouredText("Unable to connect to the database server.\n", ConsoleColor.Red);
             return;
         }
+        if (args.Length == 1) {
+            if (args[0] == "--help") {
+                Console.WriteLine("Builtin help not implemented yet.");
+                return;
+            }
+            else if (args[0] == "--version") {
+                Console.WriteLine("Connect4 v0.1");
+                return;
+            }
+            else
+                Printing.PrintColouredText($"The given argument \"{args[0]}\" not recognised. Ignoring it.\n", ConsoleColor.Yellow);
+        }
+        else if (args.Length > 1) 
+            Printing.PrintColouredText("The given arguments are not supported and ignored.\n", ConsoleColor.Yellow);
+        // Displaying the logo of the game
         Console.WriteLine(@"  #####                                           #       
  #     #  ####  #    # #    # ######  ####  ##### #    #  
  #       #    # ##   # ##   # #      #    #   #   #    #  
@@ -204,10 +219,6 @@ public class Program
  #     # #    # #   ## #   ## #      #    #   #        #  
   #####   ####  #    # #    # ######  ####    #        #  
                                                           ");
-        if (args.Length == 1 && args[0] == "--help") {
-            Console.WriteLine("Builtin help not implemented yet.");
-            return;
-        }
         // Getting the user's credentials
         Player? player1 = Connect();
         while(player1 == null) {
