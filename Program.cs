@@ -142,7 +142,21 @@ public class Program
 
     private static void New(Player player1) {
         bool choosing = true;
+        bool reversedOrder = false; // If true, the creator of the game will start second
         String input = "";
+        while (choosing) {
+            Console.Write("Would you like to start first? [Y/n] ");
+            input = Input.GetInput(true);
+            if (input == "y" || input == "yes" || input == "" || input == "n" || input == "no")
+                choosing = false;
+            else
+                Printing.PrintColouredText("Invalid input. Please answer \"yes\" or \"no\"", ConsoleColor.Red);
+        }
+        if (input == "quit")
+            return;
+        if (input == "n" || input == "no")
+            reversedOrder = true;
+        choosing = true;
         while (choosing) {
             Console.Write("Would you like to play against a human player or the computer? [Human/computer] ");
             input = Input.GetInput(true);
@@ -151,6 +165,8 @@ public class Program
             else
                 Printing.PrintColouredText("Invalid input. Please type either \"human\" or \"computer\".\n", ConsoleColor.Red);
         }
+        if (input == "quit")
+            return;
         Player? player2 = null;
         if (input == "h" || input == "human" || input == "") {
             while(player2 == null)
@@ -162,7 +178,12 @@ public class Program
             Printing.PrintColouredText("Impossible to play a game against yourself.\n", ConsoleColor.Red);
             return;
         }
-        Game game = new Game(player1, player2);
+        Game? game = null;
+        if (!reversedOrder)
+            game = new Game(player1, player2);
+        else
+            game = new Game(player2, player1);
+
     }
 
     private static bool Delete(int id) {

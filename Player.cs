@@ -38,8 +38,11 @@ namespace player
             get {
                 return colour;
             }
+            set {
+                colour = value;
+            }
         }
 
-        public abstract int NextTurn();
+        public abstract int NextTurn(Cell PlayerToMove, int depth, Board board);
     }
 }

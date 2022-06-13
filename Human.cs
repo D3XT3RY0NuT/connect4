@@ -9,7 +9,7 @@ namespace player
                 
         }
 
-        public override int NextTurn() {
+        public override int NextTurn(Cell PlayerToMove, int depth, Board board) {
             int move = 0;
             String input = "";
             bool choosing = true;
@@ -20,7 +20,7 @@ namespace player
                 if (input == "help" || input == "h")
                     Printing.PrintColouredText("Help during the game not implemented yet.\n", ConsoleColor.Yellow);
                 else if (input == "undo" || input == "u")
-                    Printing.PrintColouredText("Undo not implemented yet.\n", ConsoleColor.Yellow);
+                    return -1;
                 else if (input == "quit" || input == "q")
                     choosing = false;
                 else {

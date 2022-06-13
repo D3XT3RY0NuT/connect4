@@ -14,18 +14,20 @@ namespace game
         private bool running = true;
 
         public Game(Player player1, Player player2) {
+            player1.Colour = ConsoleColor.Blue;
+            player2.Colour = ConsoleColor.Red;
             this.player1 = player1;
             this.player2 = player2;
             this.currentPlayer = Cell.Player1;
-            this.board = new Board();
+            this.board = new Board(player1.Colour, player2.Colour);
             this.Start();
         }
 
         private int NextTurn() {
             if (this.currentPlayer == Cell.Player1)
-                return this.player1.NextTurn();
+                return this.player1.NextTurn(this.currentPlayer, 2, this.board);
             else
-                return this.player2.NextTurn();
+                return this.player2.NextTurn(this.currentPlayer, 2, this.board);
         }
 
         private void ChangeCurrentPlayer() {
@@ -37,15 +39,27 @@ namespace game
 
         private void Start() {
             Printing.PrintColouredText("The game has been successfully created.\n", ConsoleColor.Green);
-            Printing.PrintColouredText($"{player1.Name}", ConsoleColor.Blue);
+            Printing.PrintColouredText($"{player1.Name}", player1.Colour);
             Printing.PrintColouredText($" vs ", ConsoleColor.Yellow);
-            Printing.PrintColouredText($"{player2.Name}\n\n", ConsoleColor.Red);
+            Printing.PrintColouredText($"{player2.Name}\n\n", player2.Colour);
             int move = 0;
             while (this.running && !this.board.IsGameOver) {
                 this.board.Display();
                 move = this.NextTurn();
                 if (move == 0)
                     this.running = false;
+                else if (move == -1) {
+                    try {
+                        this.board.UndoMove();
+                        ChangeCurrentPlayer();
+                    }
+                    catch(BoardException e) {
+                        Printing.PrintColouredText(e.Message + "\n", ConsoleColor.Red);
+                    }
+                    catch(Exception) {
+                        Printing.PrintColouredText("Internal error occured. Please try again.\n", ConsoleColor.Red);
+                    }
+                }
                 else {
                     try {
                         this.board.PlayMove(move, this.currentPlayer);
