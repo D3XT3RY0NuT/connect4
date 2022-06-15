@@ -48,5 +48,6 @@ namespace utilities
         public const int MaxColumn = 7;
         public const int MinRow = 1;
         public const int MaxRow = 6;
+        public const int Infinity = 1000;
     }
 }

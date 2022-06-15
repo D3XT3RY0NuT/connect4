@@ -40,6 +40,13 @@ namespace board
             }
         }
 
+        // The number of occupied cells determines the player to move
+        public Cell PlayerToMove {
+            get {
+                return this.occupiedCells % 2 == 0 ? Cell.Player1 : Cell.Player2;
+            }
+        }
+
         public void Display() {
             for (int i = 0; i < Constants.MaxRow; i++) {
                 Console.Write(" ");
@@ -94,12 +101,10 @@ namespace board
             return possibleMoves;
         }
 
-        public void PlayMove(int column, Cell player) {
+        public void PlayMove(int column) {
             if (this.occupiedCells == Constants.MaxRow * Constants.MaxColumn)
                 throw new BoardException("The board is full");
             column--; // Indexing starts from 0, not 1
-            if (player == Cell.Empty)
-                throw new InvalidPlayerException();
             if (column < Constants.MinColumn - 1 || column >= Constants.MaxColumn)
                 throw new InvalidColumnException();
             int row = Constants.MaxRow - 1;
@@ -107,12 +112,13 @@ namespace board
                 row--;
             if (row == -1)
                 throw new InvalidColumnException();
-            this.board[row, column] = player;
-            this.moves[this.occupiedCells++] = column;
+            // Knowing the number of played moves determines the player to move
+            this.board[row, column] = this.PlayerToMove;
             if (CheckMove(row, column)) {
-                winningPlayer = player;
+                winningPlayer = this.PlayerToMove;
                 isGameOver = true;
             }
+            this.moves[this.occupiedCells++] = column;
             if (this.occupiedCells == Constants.MaxRow * Constants.MaxColumn)
                 isGameOver = true;
         }
@@ -120,11 +126,11 @@ namespace board
         public void UndoMove() {
             if (this.occupiedCells == 0)
                 throw new BoardException("No move has been played to be undone.");
-            int column = moves[--this.occupiedCells];
             if (this.isGameOver) {
                 this.isGameOver = false;
                 this.winningPlayer = Cell.Empty;
             }
+            int column = moves[--this.occupiedCells];
             int row = 0;
             while(this.board[row, column] == Cell.Empty)
                 row++;

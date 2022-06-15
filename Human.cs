@@ -9,7 +9,7 @@ namespace player
                 
         }
 
-        public override int NextTurn(Cell PlayerToMove, int depth, Board board) {
+        public override int NextTurn(Board board) {
             int move = 0;
             String input = "";
             bool choosing = true;

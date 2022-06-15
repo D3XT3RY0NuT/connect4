@@ -25,9 +25,9 @@ namespace game
 
         private int NextTurn() {
             if (this.currentPlayer == Cell.Player1)
-                return this.player1.NextTurn(this.currentPlayer, 2, this.board);
+                return this.player1.NextTurn(this.board);
             else
-                return this.player2.NextTurn(this.currentPlayer, 2, this.board);
+                return this.player2.NextTurn(this.board);
         }
 
         private void ChangeCurrentPlayer() {
@@ -62,7 +62,7 @@ namespace game
                 }
                 else {
                     try {
-                        this.board.PlayMove(move, this.currentPlayer);
+                        this.board.PlayMove(move);
                         ChangeCurrentPlayer();
                     }
                     catch(BoardException) {

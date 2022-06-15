@@ -43,6 +43,6 @@ namespace player
             }
         }
 
-        public abstract int NextTurn(Cell PlayerToMove, int depth, Board board);
+        public abstract int NextTurn(Board board);
     }
 }
