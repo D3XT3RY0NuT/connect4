@@ -21,8 +21,17 @@ namespace player
                     Printing.PrintColouredText("Help during the game not implemented yet.\n", ConsoleColor.Yellow);
                 else if (input == "undo" || input == "u")
                     return -1;
-                else if (input == "quit" || input == "q")
-                    choosing = false;
+                else if (input == "quit" || input == "q") {
+                    Printing.PrintColouredText("Are you sure you want to abort the game? This will result in a defeat. [y/N] ",
+                            ConsoleColor.Yellow);
+                    input = Input.GetInput(true);
+                    while(input != "yes" && input != "y" && input != "no" && input != "n" && input != "") {
+                        Printing.PrintColouredText("Please answer yes or no. [y/N] ", ConsoleColor.Red);
+                        input = Input.GetInput(true);
+                    }
+                    if (input == "yes" || input == "y")
+                        choosing = false;
+                }
                 else {
                     try {
                         move = Convert.ToInt32(input);

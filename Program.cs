@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 
+using board;
 using game;
 using player;
 using utilities;
@@ -134,6 +135,8 @@ public class Program
         Console.WriteLine(": lists all possible actions");
         Printing.PrintColouredText("new", ConsoleColor.White);
         Console.WriteLine(": creates a new game");
+        Printing.PrintColouredText("stats", ConsoleColor.White);
+        Console.WriteLine(": shows your stats");
         Printing.PrintColouredText("delete", ConsoleColor.White);
         Console.WriteLine(": deletes your account");
         Printing.PrintColouredText("quit", ConsoleColor.White);
@@ -178,12 +181,85 @@ public class Program
             Printing.PrintColouredText("Impossible to play a game against yourself.\n", ConsoleColor.Red);
             return;
         }
-        Game? game = null;
+        Game game;
         if (!reversedOrder)
             game = new Game(player1, player2);
         else
             game = new Game(player2, player1);
+        Cell gameResult = game.Start(); 
+        MySqlCommand cmd;
+        if (gameResult == Cell.Empty) {
+            try {
+                cmd = new MySqlCommand("UPDATE users SET games_played = games_played + 1 WHERE id = @id",
+                        databaseConnection);
+                cmd.Parameters.AddWithValue("@id", player1.Id);
+                cmd.Prepare();
+                cmd.ExecuteNonQuery();
+                cmd = new MySqlCommand("UPDATE users SET games_played = games_played + 1 WHERE id = @id", 
+                        databaseConnection);
+                cmd.Parameters.AddWithValue("@id", player2.Id);
+                cmd.Prepare();
+                cmd.ExecuteNonQuery();
+            }
+            catch(Exception) {
+                Printing.PrintColouredText("An internal error occured. The result of the game has not been uploaded to the server.\n",
+                        ConsoleColor.Red);
+                return;
+            }
+        }
+        else {
+            try {
+                int winningId = gameResult == Cell.Player1 ? player1.Id : player2.Id;
+                int losingId = gameResult == Cell.Player1 ? player2.Id : player1.Id;
+                if (winningId != 0) {
+                    cmd = new MySqlCommand("UPDATE users SET games_played = games_played + 1, games_won = games_won + 1 WHERE id = @id",
+                            databaseConnection);
+                    cmd.Parameters.AddWithValue("@id", winningId);
+                    cmd.Prepare();
+                    cmd.ExecuteNonQuery();
+                }
+                if (losingId != 0) {
+                    cmd = new MySqlCommand("UPDATE users SET games_played = games_played + 1, games_lost = games_lost + 1 WHERE id = @id",
+                            databaseConnection);
+                    cmd.Parameters.AddWithValue("@id", losingId);
+                    cmd.Prepare();
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch(Exception) {
+                Printing.PrintColouredText("An internal error occured. The result of the game has not been uploaded to the server.\n",
+                        ConsoleColor.Red);
+                return;
+            }
+        }
+    }
 
+    private static void Stats(int id) {
+        MySqlCommand cmd = new MySqlCommand("SELECT games_played, games_won, games_lost FROM users WHERE id = @id",
+                databaseConnection);
+        MySqlDataReader queryResult;
+        try {
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Prepare();
+            queryResult = cmd.ExecuteReader();
+        }
+        catch(Exception) {
+            Printing.PrintColouredText("Error while trying to communicate with the server.\n", ConsoleColor.Red);
+            return;
+        }
+        if (queryResult.Read()) {
+            int games_played = queryResult.GetInt32("games_played");
+            int games_won = queryResult.GetInt32("games_won");
+            int games_lost = queryResult.GetInt32("games_lost");
+            Printing.PrintColouredText("Games played: " + games_played + "\n", ConsoleColor.White);
+            Printing.PrintColouredText("Games won: ", ConsoleColor.White);
+            Printing.PrintColouredText(games_won + "\n", ConsoleColor.Green);
+            Printing.PrintColouredText("Draws: ", ConsoleColor.White);
+            Printing.PrintColouredText((games_played - games_won - games_lost) + "\n", ConsoleColor.Yellow);
+            Printing.PrintColouredText("Games lost: ", ConsoleColor.White);
+            Printing.PrintColouredText(games_lost + "\n", ConsoleColor.Red);
+        }
+        queryResult.Close();
     }
 
     private static bool Delete(int id) {
@@ -288,6 +364,8 @@ public class Program
                 Help();
             else if (input == "new") 
                 New(player1);
+            else if (input == "stats")
+                Stats(player1.Id);
             else if (input == "delete")
                 connected = Delete(player1.Id);
             else if (input == "quit") 

@@ -20,7 +20,6 @@ namespace game
             this.player2 = player2;
             this.currentPlayer = Cell.Player1;
             this.board = new Board(player1.Colour, player2.Colour);
-            this.Start();
         }
 
         private int NextTurn() {
@@ -37,17 +36,18 @@ namespace game
                 this.currentPlayer = Cell.Player1;
         }
 
-        private void Start() {
+        public Cell Start() {
             Printing.PrintColouredText("The game has been successfully created.\n", ConsoleColor.Green);
             Printing.PrintColouredText($"{player1.Name}", player1.Colour);
             Printing.PrintColouredText($" vs ", ConsoleColor.Yellow);
             Printing.PrintColouredText($"{player2.Name}\n\n", player2.Colour);
             int move = 0;
-            while (this.running && !this.board.IsGameOver) {
+            int gameAborted = 0; // 1 -> player1 aborted the game, 2 -> player2 aborted the game
+            while (this.running && !this.board.IsGameOver && gameAborted == 0) {
                 this.board.Display();
                 move = this.NextTurn();
                 if (move == 0)
-                    this.running = false;
+                    gameAborted = this.currentPlayer == Cell.Player1 ? 1 : 2;
                 else if (move == -1) {
                     try {
                         this.board.UndoMove();
@@ -74,13 +74,20 @@ namespace game
                 }
             }
             this.board.Display();
-            if (this.board.WinningPlayer == Cell.Player1)
+            Cell result = Cell.Empty;
+            if (this.board.WinningPlayer == Cell.Player1 || gameAborted == 2) {
+                result = Cell.Player1;
                 Printing.PrintColouredText($"{player1.Name} has won! Congratulations!\n", player1.Colour);
-            else if (this.board.WinningPlayer == Cell.Player2)
+            }
+            else if (this.board.WinningPlayer == Cell.Player2 || gameAborted == 1) {
+                result = Cell.Player2;
                 Printing.PrintColouredText($"{player2.Name} has won! Congratulations!\n", player2.Colour);
+            }
             else
                 Printing.PrintColouredText($"Draw! This was a though game!\n", ConsoleColor.White);
             Printing.PrintColouredText("Game ended.\n", ConsoleColor.Gray);
+
+            return result;
         }
     }
 }
