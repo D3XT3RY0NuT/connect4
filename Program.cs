@@ -182,10 +182,12 @@ public class Program
             return;
         }
         Game game;
-        if (!reversedOrder)
-            game = new Game(player1, player2);
-        else
-            game = new Game(player2, player1);
+        if (reversedOrder) {
+            Player aux = player1;
+            player1 = player2;
+            player2 = aux;
+        }
+        game = new Game(player1, player2);
         Cell gameResult = game.Start(); 
         MySqlCommand cmd;
         if (gameResult == Cell.Empty) {
